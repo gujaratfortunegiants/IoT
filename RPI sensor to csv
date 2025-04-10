@@ -1,0 +1,131 @@
+Function
+let pulseCount = context.get('pulseCount') || 0;
+let prevState = context.get('prevState') || 0;
+let currentState = msg.payload;
+var i=1;
+
+if (currentState === 1 && prevState === 0) {
+pulseCount++;
+}
+context.set('prevState', currentState);
+
+let timeInterval = 2;
+let beatsPerMinute = pulseCount * 77;
+
+msg.payload = i++ + "," + new Date().toISOString()+ "," + pulseCount + "," + beatsPerMinute;
+return msg;
+
+
+JSON
+[
+    {
+        "id": "b9a7055c5e3baa61",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2b0a748716d76817",
+        "type": "inject",
+        "z": "b9a7055c5e3baa61",
+        "name": "Trigger every 2 seconds",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "2",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 330,
+        "y": 220,
+        "wires": [
+            [
+                "55ebb971fdbe0dfd"
+            ]
+        ]
+    },
+    {
+        "id": "ef86c880dedf51fe",
+        "type": "rpi-gpio in",
+        "z": "b9a7055c5e3baa61",
+        "name": "Read KY-039 Signal (GPIO 17)",
+        "pin": "17",
+        "intype": "up",
+        "debounce": "25",
+        "read": true,
+        "bcm": true,
+        "x": 610,
+        "y": 220,
+        "wires": [
+            [
+                "55ebb971fdbe0dfd"
+            ]
+        ]
+    },
+    {
+        "id": "55ebb971fdbe0dfd",
+        "type": "function",
+        "z": "b9a7055c5e3baa61",
+        "name": "Pulse Detection and BPM",
+        "func": "let pulseCount = context.get('pulseCount') || 0;\nlet prevState = context.get('prevState') || 0;\nlet currentState = msg.payload;\nvar i=1;\n\nif (currentState === 1 && prevState === 0) {\n    pulseCount++;\n}\ncontext.set('prevState', currentState);\n\nlet timeInterval = 2;\nlet beatsPerMinute = pulseCount * 77;\n\nmsg.payload = i++ + \",\" + new Date().toISOString()+ \",\" + pulseCount + \",\" + beatsPerMinute;\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 870,
+        "y": 220,
+        "wires": [
+            [
+                "cf46a13cc17e3cb1",
+                "7f05e60519ca99d7"
+            ]
+        ]
+    },
+    {
+        "id": "cf46a13cc17e3cb1",
+        "type": "file",
+        "z": "b9a7055c5e3baa61",
+        "name": "Log to File",
+        "filename": "/home/pi/heartbeat.csv",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1150,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7f05e60519ca99d7",
+        "type": "debug",
+        "z": "b9a7055c5e3baa61",
+        "name": "Debug Output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1060,
+        "y": 400,
+        "wires": []
+    }
+]
