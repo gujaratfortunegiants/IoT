@@ -1,0 +1,157 @@
+[{"id":"636a9cd3bd38a9a7","type":"tab","label":"Flow 
+2","disabled":false,"info":"","env":[]},{"id":"80d847b41d379e
+ 91","type":"function","z":"636a9cd3bd38a9a7","name":"K
+means","func":"const data = msg.payload;\nconst k = 3; // 
+number of clusters\nconst maxIterations = 10;\n\n// 
+Randomly initialize centroids (first k points)\nlet centroids = 
+data.slice(0, k);\n\nfunction distance(a, b) {\n    
+return 
+a.reduce((sum, val, i) => sum + Math.abs(val - b[i]), 
+0);\n}\n\nlet assignments = [];\n\nfor (let i = 0; i < 
+maxIterations; i++) {\n    let clusters = Array.from({ length: k }, 
+() => []);\n    assignments = [];\n\n    // Assign each point to 
+nearest centroid\n    
+data.forEach(point => {\n        
+let 
+let 
+distances = centroids.map(c => distance(point, c));\n        
+clusterIndex = distances.indexOf(Math.min(...distances));\n        
+clusters[clusterIndex].push(point);\n        
+assignments.push({ 
+point, cluster: clusterIndex });\n    
+});\n\n    
+// Recalculate 
+centroids\n    centroids = clusters.map(cluster => {\n        
+len = cluster.length;\n        
+let 
+if (len === 0) return 
+Array(data[0].length).fill(0); // Prevent NaN\n        
+cluster.reduce((acc, point) => {\n            
+let sum = 
+return acc.map((val, 
+idx) 
+=> val + point[idx]);\n        
+Array(data[0].length).fill(0));\n        
+}, 
+return sum.map(val => val 
+/ len);\n    
+});\n}\n\n// Output includes final centroids and 
+point-cluster mapping\nmsg.payload = {\n    
+finalCentroids: 
+=> 
+({ 
+centroids,\n    assignments: assignments.map(({ point, cluster 
+}) 
+point, 
+cluster 
+msg.payload.finalCentroids;  
+})),\n};\n\nlet 
+c 
+= 
+// Example: {0: [22,60], 1: 
+[45,80], 2: [70,30]}\nlet a = msg.payload.assignments;  // 
+Example: [{point: [22,60], cluster: 0}, ...]\n\nlet d = [];\n\n// 
+Add 
+centroids 
+with 
+a 
+distinct 
+color\nObject.entries(c).forEach(([cluster, coord]) => {\n    
+d.push({ x: coord[0], y: coord[1], label: `Cluster ${cluster} 
+(Centroid)`, type: \"centroid\" });\n});\n\n// Add assigned 
+points\na.forEach(({ point, cluster }) => {\n    
+d.push({ x: 
+point[0], y: point[1], label: `Cluster ${cluster}`, type: 
+\"point\", cluster });\n});\n\nmsg.payload = d;\nreturn 
+msg;","outputs":1,"timeout":0,"noerr":0,"initialize":"","finaliz
+ e":"","libs":[],"x":620,"y":220,"wires":[["f72bde566935353f",
+"c75f0236e8a35d53"]]},{"id":"16a7decf19d309a3","type":"inj
+ ect","z":"636a9cd3bd38a9a7","name":"21MIS1174 
+(Input)","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"rep
+ eat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","
+ payload":"[[22,60],[20,55],[25,65],[18,50],[30,70],[21,58],[23,
+ 62],[26,68]]","payloadType":"json","x":410,"y":220,"wires":[[
+ "80d847b41d379e91"]]},{"id":"f72bde566935353f","type":"d
+ ebug","z":"636a9cd3bd38a9a7","name":"debug","active":tru
+ e,"tosidebar":true,"console":false,"tostatus":false,"complete
+ ":"payload","targetType":"msg","statusVal":"","statusType":"
+ auto","x":830,"y":220,"wires":[]},{"id":"c75f0236e8a35d53","
+ type":"ui_template","z":"636a9cd3bd38a9a7","group":"0a8e
+ 951cbc9c3edb","name":"","order":0,"width":0,"height":0,"fo
+ rmat":"<canvas 
+id=\"scatterChart\" 
+width=\"1000px\" 
+height=\"500px\"></canvas>\n\n<script>\n    
+(function(scope) 
+{\n        
+let 
+ctx 
+= 
+document.getElementById(\"scatterChart\").getContext(\"2d
+ \");\n\n        
+scope.$watch('msg.payload', function(data) {\n            
+if (!data) return;\n\n            
+let centroids = data.filter(d => 
+d.type === \"centroid\");\n            
+d.type === \"point\");\n\n            
+let points = data.filter(d => 
+let colors = [\"red\", 
+\"blue\", \"green\"]; // Define cluster colors\n\n            
+datasets = [];\n\n            
+let 
+// Add centroids dataset\n            
+datasets.push({\n                
+label: \"Centroids\",\n                
+data: centroids.map(d => ({ x: d.x, y: d.y })),\n                
+backgroundColor: \"black\",\n                
+pointRadius: 7,\n                
+pointStyle: \"triangle\"\n            
+});\n\n            
+// Add points 
+dataset per cluster\n            
+Set(points.map(p 
+clusters.forEach((cluster, 
+datasets.push({\n                    
+=> 
+let clusters = [...new 
+p.cluster))];\n            
+index) 
+=> 
+{\n                
+label: `Cluster ${cluster}`,\n                    
+data: points.filter(p => p.cluster === cluster).map(d => ({ x: 
+d.x, y: d.y })),\n                    
+backgroundColor: colors[index % 
+colors.length],\n                    
+});\n\n            
+(scope.chart) {\n                
+datasets;\n                
+pointRadius: 5\n                
+// Create or update the chart\n            
+});\n            
+if 
+scope.chart.data.datasets = 
+scope.chart.update();\n            
+scope.chart = new Chart(ctx, {\n                    
+} else {\n                
+type: 'scatter',\n                    
+data: { datasets },\n                    
+responsive: true,\n                        
+options: {\n                        
+scales: {\n                            
+x: { 
+title: { display: true, text: \"X-Axis (Centroids)\" } },\n                            
+y: { title: { display: true, text: \"Y-Axis (Points)\" } }\n                        
+}\n                    
+}\n                
+});\n            
+}\n        
+});\n    
+})(scope);\n</script>","storeOutMessages":true,"fwdInMessa
+ ges":true,"resendOnRefresh":true,"templateScope":"local","c
+ lassName":"","x":840,"y":320,"wires":[[]]},{"id":"0a8e951cbc
+ 9c3edb","type":"ui_group","name":"21MIS1174 (Display of 
+Cluster)","tab":"e1010ad4089e4617","order":1,"disp":true,"
+ width":"6","collapse":false,"className":""},{"id":"e1010ad40
+ 89e4617","type":"ui_tab","name":"Kmeans","icon":"dashboa
+ rd","order":6,"disabled":false,"hidden":false}]
