@@ -6,3 +6,4 @@ node-red-contrib-dht-sensor
 
 node-red-node-pisrf
 
+node-red-contrib-regression
